@@ -139,8 +139,17 @@ class FirmwareProfile:
             self.pv_channel_1_power_scale,
             self.em_energy_scale,
             self.supports_em_status,
+            self.supports_marstek_data,
             self.max_manual_schedule_slot,
         )
+
+    @property
+    def supports_marstek_data(self) -> bool:
+        """Return whether this profile has the Venus E 3.0 GetData telemetry."""
+        # The Control 151 binary has the handler and field mapping. Control
+        # 401 was verified with a live device in bypass, backup and charging.
+        generation = self.control_generation
+        return self.family is DeviceFamily.VENUS_E and generation is not None and generation >= 151
 
     @property
     def control_generation(self) -> int | None:
@@ -484,6 +493,7 @@ def firmware_profile_diagnostics(profile: FirmwareProfile) -> dict[str, Any]:
         "supports_sys_led": profile.supports_sys_led,
         "supports_ups": profile.supports_ups,
         "supports_em_status": profile.supports_em_status,
+        "supports_marstek_data": profile.supports_marstek_data,
         "max_manual_schedule_slot": profile.max_manual_schedule_slot,
         "requires_manual_set": profile.requires_manual_set,
         "control_generation": profile.control_generation,

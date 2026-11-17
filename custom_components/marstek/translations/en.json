@@ -204,6 +204,12 @@
       "ongrid_power": {
         "name": "On-grid power"
       },
+      "grid_power": {
+        "name": "Grid power"
+      },
+      "inverter_power": {
+        "name": "Inverter power"
+      },
       "offgrid_power": {
         "name": "Off-grid power"
       },

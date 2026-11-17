@@ -69,6 +69,7 @@
       'requires_manual_set': False,
       'shared_meter_udp_channel': False,
       'supports_em_status': False,
+      'supports_marstek_data': False,
       'supports_pv': False,
       'supports_sys_ble_advertising': False,
       'supports_sys_dod': False,

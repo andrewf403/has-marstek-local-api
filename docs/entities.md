@@ -38,6 +38,8 @@ These are the main readings. Power is in watts (W), energy in watt-hours (Wh). *
 | Battery level | `battery_soc` | % | — | Enabled |
 | Battery power | `battery_power` | W | — | Enabled |
 | On-grid power | `ongrid_power` | W | — | Enabled (if supported) |
+| Grid power | `grid_power` | W | — | Enabled (Venus E 3.0 firmware 151 or later) |
+| Inverter power | `inverter_power` | W | — | Enabled (Venus E 3.0 firmware 151 or later) |
 | Off-grid power | `offgrid_power` | W | — | Enabled (if supported). Optional clamp to 0 W for negative readings: see [Options](options.md#power-settings). |
 | PV power | `pv_power` | W | — | Enabled (if supported) |
 | Device mode | `device_mode` | — | — | Enabled |
@@ -55,6 +57,8 @@ These are the main readings. Power is in watts (W), energy in watt-hours (Wh). *
 | Battery total capacity | `bat_cap` | Wh | — | Enabled (if reported; not created on Venus E mini, whose firmware reports remaining energy there) |
 | Usable capacity | `battery_usable_capacity` | Wh | — | Enabled. Unknown until enough clean measurements exist; see [Usable capacity](usable-capacity.md). |
 | Battery state of health | `battery_state_of_health` | % | — | Enabled (when the rated capacity is known) |
+
+On Venus E 3.0 firmware 151 or later, Grid power includes what mains supplies to the backup outlet. Import is negative. Inverter power is positive during discharge and negative while charging. The same `Marstek.GetData` reply provides Off-grid power and Battery status. Battery status can show Idle during low-load backup. Grid power, Inverter power, and Battery status become unknown when the poll misses this reply.
 
 ### Restarts
 

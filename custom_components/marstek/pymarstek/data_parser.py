@@ -450,6 +450,28 @@ def parse_em_status_response(
     return parsed
 
 
+def parse_marstek_data_response(response: dict[str, Any]) -> dict[str, Any]:
+    """Decode the battery state and a coherent set of GetData power readings."""
+    result = _result_fields(response)
+    parsed: dict[str, Any] = {}
+    battery_state = result.get("bat_state")
+    if type(battery_state) is int and (
+        status := {1: "idle", 2: "charging", 3: "discharging"}.get(battery_state)
+    ):
+        parsed["battery_status"] = status
+    power_fields = {
+        "grid_power": result.get("grid_pow"),
+        "inverter_power": result.get("inv_pow"),
+        "offgrid_power": result.get("off_grid_pow"),
+    }
+    if all(
+        type(value) in (int, float) and not _is_unusable_value(value)
+        for value in power_fields.values()
+    ):
+        parsed.update(power_fields)
+    return parsed
+
+
 def parse_bat_status_response(response: dict[str, Any]) -> dict[str, Any]:
     """Parse Bat.GetStatus response into structured data.
 

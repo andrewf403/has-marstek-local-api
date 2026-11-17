@@ -15,18 +15,20 @@ from typing import Any, Protocol
 
 from ..firmware_profile import FirmwareProfile
 from .command_builder import (
+    build_command,
     get_battery_status,
     get_em_status,
     get_es_status,
     get_pv_status,
     get_wifi_status,
 )
-from .const import DEFAULT_UDP_PORT
+from .const import CMD_MARSTEK_DATA, DEFAULT_UDP_PORT, MARSTEK_DATA_FRESH_KEYS
 from .data_parser import (
     merge_device_status,
     parse_bat_status_response,
     parse_em_status_response,
     parse_es_status_response,
+    parse_marstek_data_response,
     parse_pv_status_response,
     parse_wifi_status_response,
 )
@@ -92,6 +94,13 @@ def _es_status_summary(data: Mapping[str, Any]) -> str:
     )
 
 
+def _marstek_data_summary(data: Mapping[str, Any]) -> str:
+    return (
+        f"BatteryStatus={data.get('battery_status')}, "
+        f"GridPower={data.get('grid_power')}W, InverterPower={data.get('inverter_power')}W"
+    )
+
+
 def _em_status_summary(data: Mapping[str, Any]) -> str:
     connected = "Connected" if data.get("ct_connected") else "Not connected"
     return f"CT={connected}, TotalPower={data.get('em_total_power')}W"
@@ -135,6 +144,16 @@ def build_status_reads(
             _es_status_summary,
         )
     ]
+    if profile is not None and profile.supports_marstek_data:
+        reads.append(
+            StatusRead(
+                "marstek_data",
+                CMD_MARSTEK_DATA,
+                build_command(CMD_MARSTEK_DATA, {"id": 0}),
+                parse_marstek_data_response,
+                _marstek_data_summary,
+            )
+        )
     if include_em:
         reads.append(
             StatusRead(
@@ -258,6 +277,8 @@ class _PollRun:
             )
             return None
         parsed = read.parse(response)
+        if not parsed:
+            return None
         self.has_fresh_data = True
         _LOGGER.debug("%s parsed for %s: %s", read.method, self._device_ip, read.summary(parsed))
         return parsed
@@ -344,5 +365,13 @@ async def fetch_device_status(
         last_update=transport.loop_time(),
         previous_status=previous_status,
     )
+    if profile is not None and profile.supports_marstek_data:
+        marstek_data = collected.get("marstek_data") or {}
+        # GetData values belong to this poll. A missed reply must not turn a
+        # stale wattage or the ES.GetStatus estimate into a fresh observation.
+        for key in MARSTEK_DATA_FRESH_KEYS:
+            status[key] = marstek_data.get(key)
+        if "offgrid_power" in marstek_data:
+            status["offgrid_power"] = marstek_data["offgrid_power"]
     status["has_fresh_data"] = run.has_fresh_data
     return status

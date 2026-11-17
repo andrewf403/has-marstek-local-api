@@ -233,22 +233,26 @@ async def test_scanner_firmware_150_to_149_removes_unsupported_sys(
         assert hass.states.get(operating_mode_id) is not None
 
 
-async def test_scanner_firmware_150_to_151_updates_without_reload(
-    hass: HomeAssistant,
+@pytest.mark.parametrize(
+    ("previous", "updated", "expect_reload"), [(150, 151, True), (151, 401, False)]
+)
+async def test_scanner_firmware_get_data_capability_change(
+    hass: HomeAssistant, previous: int, updated: int, expect_reload: bool
 ) -> None:
-    """Capability-equivalent firmware updates metadata and sw_version only."""
-    entry = _config_entry(version=150)
+    """A firmware update reloads only when the GetData capability changes."""
+    entry = _config_entry(version=previous)
     async with _loaded_entry(hass, entry):
         _assert_sys_entities(hass, present=True)
 
         async with _count_reloads(hass) as reload_ids:
-            await _scan_devices(hass, [_discovered_device(version=151, firmware="151")])
+            await _scan_devices(hass, [_discovered_device(version=updated, firmware=str(updated))])
 
-        assert reload_ids == []
-        _assert_sw_version(hass, entry, 151)
+        assert reload_ids == ([entry.entry_id] if expect_reload else [])
+        _assert_sw_version(hass, entry, updated)
         _assert_sys_entities(hass, present=True)
         assert MODE_UPS in _operating_mode_options(hass)
-        assert entry.runtime_data.device_info["version"] == 151
+        assert entry.runtime_data.device_info["version"] == updated
+        assert entry.runtime_data.coordinator.profile.supports_marstek_data
 
 
 async def test_scanner_wifi_metadata_does_not_reload(hass: HomeAssistant) -> None:
@@ -349,6 +353,7 @@ async def test_diagnostics_follow_live_firmware_transition(hass: HomeAssistant) 
             "supports_sys_led": False,
             "supports_ups": False,
             "supports_em_status": True,
+            "supports_marstek_data": False,
             "max_manual_schedule_slot": 9,
             "requires_manual_set": False,
             "control_generation": 149,
@@ -371,6 +376,7 @@ async def test_diagnostics_follow_live_firmware_transition(hass: HomeAssistant) 
             "supports_sys_led": True,
             "supports_ups": True,
             "supports_em_status": True,
+            "supports_marstek_data": False,
             "max_manual_schedule_slot": 9,
             "requires_manual_set": False,
             "control_generation": 150,

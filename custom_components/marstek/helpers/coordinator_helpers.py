@@ -30,6 +30,7 @@ def has_valid_status_data(device_status: dict[str, Any]) -> bool:
         or battery_status not in (None, "Unknown")
         or pv_power != 0
         or em_total_power is not None
+        or device_status.get("grid_power") is not None
         or wifi_rssi is not None
         or bat_temp is not None
     )

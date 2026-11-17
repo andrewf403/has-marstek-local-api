@@ -26,6 +26,7 @@ from .const import (
     CMD_ES_SET_MODE,
     CMD_ES_STATUS,
     CMD_LED_CTRL,
+    CMD_MARSTEK_DATA,
     CMD_PV_GET_STATUS,
     CMD_WIFI_STATUS,
     DOD_MAX_VALUE,
@@ -220,6 +221,10 @@ VALID_METHODS: dict[str, MethodSpec] = {
         method=CMD_DISCOVER,
         required_params=frozenset(),
         optional_params=frozenset({"ble_mac"}),
+    ),
+    CMD_MARSTEK_DATA: MethodSpec(
+        method=CMD_MARSTEK_DATA,
+        required_params=frozenset({"id"}),
     ),
     CMD_BATTERY_STATUS: MethodSpec(
         method=CMD_BATTERY_STATUS,

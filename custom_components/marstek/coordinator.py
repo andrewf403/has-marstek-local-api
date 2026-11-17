@@ -57,6 +57,7 @@ from .helpers.restart_detector import (
     restart_attributes,
 )
 from .pymarstek import MarstekUDPClient
+from .pymarstek.const import MARSTEK_DATA_FRESH_KEYS
 from .scanner import MarstekScanner
 
 _LOGGER = logging.getLogger(__name__)
@@ -230,6 +231,8 @@ class MarstekDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             failure_threshold,
             err,
         )
+        if self.profile.supports_marstek_data:
+            return cached | dict.fromkeys(MARSTEK_DATA_FRESH_KEYS)
         return cached
 
     def _get_medium_interval(self) -> int:
