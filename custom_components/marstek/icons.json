@@ -44,6 +44,9 @@
       "ongrid_power": {
         "default": "mdi:flash"
       },
+      "ups_charge_speed": {
+        "default": "mdi:battery-charging"
+      },
       "offgrid_power": {
         "default": "mdi:power-socket"
       },
@@ -99,7 +102,7 @@
           "ai": "mdi:robot",
           "manual": "mdi:calendar-clock",
           "passive": "mdi:timer-outline",
-          "ups": "mdi:uninterruptible-power-supply"
+          "ups": "mdi:power-plug-battery"
         }
       },
       "battery_status": {
@@ -260,7 +263,7 @@
       "operating_mode": {
         "default": "mdi:cog",
         "state": {
-          "ups": "mdi:uninterruptible-power-supply"
+          "ups": "mdi:power-plug-battery"
         }
       }
     },

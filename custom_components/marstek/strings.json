@@ -210,6 +210,9 @@
       "inverter_power": {
         "name": "Inverter power"
       },
+      "ups_charge_speed": {
+        "name": "UPS charge speed"
+      },
       "offgrid_power": {
         "name": "Off-grid power"
       },

@@ -231,6 +231,8 @@ class MarstekDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             failure_threshold,
             err,
         )
+        if "ups_charge_speed" in cached:
+            cached = cached | {"ups_charge_speed": None}
         if self.profile.supports_marstek_data:
             return cached | dict.fromkeys(MARSTEK_DATA_FRESH_KEYS)
         return cached

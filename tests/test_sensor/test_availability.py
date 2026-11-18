@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.sensor import SensorExtraStoredData
@@ -17,7 +18,11 @@ from custom_components.marstek.const import (
     ha_operating_mode,
 )
 from custom_components.marstek.device_info import get_device_identifier
-from custom_components.marstek.pymarstek.data_parser import merge_device_status
+from custom_components.marstek.firmware_profile import resolve_firmware_profile
+from custom_components.marstek.pymarstek.data_parser import (
+    merge_device_status,
+    parse_es_mode_response,
+)
 from custom_components.marstek.sensor import MarstekSensor
 from tests.conftest import create_mock_client, patch_marstek_integration
 
@@ -56,6 +61,61 @@ async def test_coordinator_success_creates_entities(
         state = hass.states.get("sensor.venus_battery_level")
         assert state is not None
         assert state.state == "55"
+        assert hass.states.get("sensor.venus_ups_charge_speed") is None
+
+
+async def test_ups_charge_speed_uses_only_current_schedule(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """The configured wattage appears and clears as the reply changes."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, "device_type": "VenusE 3.0", "version": 401},
+    )
+    profile = resolve_firmware_profile("VenusE 3.0", 401)
+    direct_ups = {"mode": "UPS", "bat_soc": 100}
+    schedule_ups = {
+        "mode": "Manual",
+        "bat_soc": 100,
+        "time_num": 9,
+        "enable": 1,
+        "start_time": "00:00",
+        "end_time": "23:59",
+        "week_set": 127,
+        "power": -1600,
+    }
+    samples = iter((direct_ups, schedule_ups, direct_ups, schedule_ups, None))
+
+    async def get_status(*_args: Any, **kwargs: Any) -> dict[str, Any]:
+        reply = next(samples)
+        if reply is None:
+            raise TimeoutError
+        return merge_device_status(
+            es_mode_data=parse_es_mode_response({"result": reply}, profile),
+            previous_status=kwargs.get("previous_status"),
+        )
+
+    client = create_mock_client(status={"device_mode": MODE_UPS, "battery_soc": 100})
+    client.get_device_status = AsyncMock(side_effect=get_status)
+
+    with patch_marstek_integration(client=client):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        entity_id = "sensor.venus_e_3_0_ups_charge_speed"
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == "unknown"
+        assert state.attributes["unit_of_measurement"] == "W"
+        assert "state_class" not in state.attributes
+
+        coordinator = mock_config_entry.runtime_data.coordinator
+        for expected in ("1600", "unknown", "1600", "unknown"):
+            await coordinator.async_refresh()
+            state = hass.states.get(entity_id)
+            assert state is not None
+            assert state.state == expected
 
 
 async def test_device_mode_enum_accepts_ups(

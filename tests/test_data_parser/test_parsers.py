@@ -301,11 +301,13 @@ class TestParseEsModeResponse:
         )
 
         assert result["device_mode"] == "ups"
+        assert "ups_charge_speed" not in result
 
     @pytest.mark.parametrize(
         ("device", "version", "overrides", "expected"),
         [
             ("VenusE 3.0", 401, {}, "ups"),
+            ("VenusE 3.0", 401, {"mode": "UPS"}, "ups"),
             ("VenusE 3.0", 401, {"time_num": 0}, "manual"),
             ("VenusE 3.0", 401, {"enable": 0}, "manual"),
             ("VenusE 3.0", 401, {"week_set": 31}, "manual"),
@@ -340,6 +342,7 @@ class TestParseEsModeResponse:
         )
 
         assert result["device_mode"] == expected
+        assert result.get("ups_charge_speed") == (1600 if expected == "ups" else None)
 
     @pytest.mark.parametrize(
         ("wire_mode", "expected"),

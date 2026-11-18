@@ -278,6 +278,17 @@ SENSORS: tuple[MarstekSensorEntityDescription, ...] = (
         exists_fn=lambda data: _exists_key_with_value("inverter_power", data),
     ),
     MarstekSensorEntityDescription(
+        key="ups_charge_speed",
+        translation_key="ups_charge_speed",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        suggested_display_precision=0,
+        value_fn=lambda coordinator, _info, _entry: _value_from_data(
+            "ups_charge_speed", coordinator.data or {}
+        ),
+        exists_fn=lambda data: _exists_key_with_value("ups_charge_speed", data),
+    ),
+    MarstekSensorEntityDescription(
         key="offgrid_power",
         translation_key="offgrid_power",
         native_unit_of_measurement=UnitOfPower.WATT,

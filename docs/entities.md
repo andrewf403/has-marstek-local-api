@@ -40,6 +40,7 @@ These are the main readings. Power is in watts (W), energy in watt-hours (Wh). *
 | On-grid power | `ongrid_power` | W | — | Enabled (if supported) |
 | Grid power | `grid_power` | W | — | Enabled (Venus E 3.0 firmware 151 or later) |
 | Inverter power | `inverter_power` | W | — | Enabled (Venus E 3.0 firmware 151 or later) |
+| UPS charge speed | `ups_charge_speed` | W | — | Enabled on UPS-capable Venus E 3.0. Shows the configured wattage when the device reports the UPS schedule. |
 | Off-grid power | `offgrid_power` | W | — | Enabled (if supported). Optional clamp to 0 W for negative readings: see [Options](options.md#power-settings). |
 | PV power | `pv_power` | W | — | Enabled (if supported) |
 | Device mode | `device_mode` | — | — | Enabled |

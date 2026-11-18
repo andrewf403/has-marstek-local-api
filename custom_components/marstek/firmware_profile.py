@@ -140,6 +140,7 @@ class FirmwareProfile:
             self.em_energy_scale,
             self.supports_em_status,
             self.supports_marstek_data,
+            self.supports_ups_schedule_readback,
             self.max_manual_schedule_slot,
         )
 
@@ -150,6 +151,11 @@ class FirmwareProfile:
         # 401 was verified with a live device in bypass, backup and charging.
         generation = self.control_generation
         return self.family is DeviceFamily.VENUS_E and generation is not None and generation >= 151
+
+    @property
+    def supports_ups_schedule_readback(self) -> bool:
+        """Return whether this profile can report UPS through slot 9."""
+        return self.family is DeviceFamily.VENUS_E and self.supports_ups
 
     @property
     def control_generation(self) -> int | None:

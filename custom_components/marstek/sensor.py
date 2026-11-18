@@ -183,6 +183,9 @@ async def async_setup_entry(
 
     data = coordinator.data or {}
     data_for_exists = dict(data)
+    # A supported device may start in a mode whose reply omits the setpoint.
+    if coordinator.profile.supports_ups_schedule_readback:
+        data_for_exists.setdefault("ups_charge_speed", None)
     if coordinator.profile.supports_pv:
         data_for_exists.setdefault("pv_power", None)
         data_for_exists.setdefault("total_pv_energy", None)
