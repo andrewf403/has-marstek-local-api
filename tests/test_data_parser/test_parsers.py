@@ -303,6 +303,45 @@ class TestParseEsModeResponse:
         assert result["device_mode"] == "ups"
 
     @pytest.mark.parametrize(
+        ("device", "version", "overrides", "expected"),
+        [
+            ("VenusE 3.0", 401, {}, "ups"),
+            ("VenusE 3.0", 401, {"time_num": 0}, "manual"),
+            ("VenusE 3.0", 401, {"enable": 0}, "manual"),
+            ("VenusE 3.0", 401, {"week_set": 31}, "manual"),
+            ("VenusE 3.0", 401, {"start_time": "01:00"}, "manual"),
+            ("VenusE 3.0", 401, {"end_time": "20:00"}, "manual"),
+            ("VenusE 3.0", 401, {"power": 1600}, "manual"),
+            ("VenusE 3.0", 401, {"power": None}, "manual"),
+            ("VenusE 3.0", 401, {"mode": "Auto"}, "auto"),
+            ("VenusE 3.0", 149, {}, "manual"),
+            ("VenusE", 401, {}, "manual"),
+            ("VenusD", 401, {}, "manual"),
+        ],
+    )
+    def test_parse_venus_e_ups_schedule(
+        self, device: str, version: int, overrides: dict[str, object], expected: str
+    ) -> None:
+        """Recognize the all-day UPS charging slot on supported Venus E 3.0."""
+        result = parse_es_mode_response(
+            {
+                "result": {
+                    "mode": "Manual",
+                    "time_num": 9,
+                    "enable": 1,
+                    "week_set": 127,
+                    "start_time": "00:00",
+                    "end_time": "23:59",
+                    "power": -1600,
+                    **overrides,
+                },
+            },
+            resolve_firmware_profile(device, version),
+        )
+
+        assert result["device_mode"] == expected
+
+    @pytest.mark.parametrize(
         ("wire_mode", "expected"),
         [
             (0, "auto"),

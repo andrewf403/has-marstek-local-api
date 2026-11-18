@@ -6,8 +6,8 @@ import logging
 import math
 from typing import Any
 
-from ..const import normalize_operating_mode
-from ..firmware_profile import FirmwareProfile, resolve_firmware_profile
+from ..const import MODE_MANUAL, MODE_UPS, normalize_operating_mode
+from ..firmware_profile import DeviceFamily, FirmwareProfile, resolve_firmware_profile
 from .energy_guard import (
     apply_energy_total_guard,
     track_restored_totals,
@@ -130,6 +130,23 @@ def parse_es_mode_response(
     # integer 0-4 used by some firmwares. Never treat ongrid_power as battery
     # power (the vendor library does; ES.GetStatus owns battery_power).
     device_mode = normalize_operating_mode(raw_mode)
+
+    # Venus E 3.0 Control can report UPS as Manual with the dedicated
+    # charging schedule in slot 9. Use the schedule shape observed on 401.
+    schedule_power = result.get("power")
+    if (
+        device_mode == MODE_MANUAL
+        and active_profile.family is DeviceFamily.VENUS_E
+        and active_profile.supports_ups
+        and result.get("time_num") == 9
+        and result.get("enable") == 1
+        and result.get("week_set") == 127
+        and result.get("start_time") == "00:00"
+        and result.get("end_time") == "23:59"
+        and isinstance(schedule_power, int)
+        and schedule_power < 0
+    ):
+        device_mode = MODE_UPS
 
     # NOTE: ongrid_power is GRID power, not battery power!
     # Positive = exporting to grid, Negative = importing from grid
